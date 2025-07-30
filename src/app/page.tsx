@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { AddVideoForm } from '@/components/AddVideoForm'
 import { VideoPlayerSection } from '@/components/VideoPlayerSection'
-import { PlaylistCard } from '@/components/PlaylistCard'
+import { PlaylistCarousel } from '@/components/PlaylistCarousel'
 import { LandingSection } from '@/components/LandingSection'
 import { FloatingNavbar } from '@/components/FloatingNavbar'
 import { Loading } from '@/components/ui/loading'
@@ -138,17 +138,12 @@ export default function Home() {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {playlists.map((playlist, index) => (
-                <PlaylistCard
-                  key={playlist._id}
-                  playlist={playlist}
-                  isSelected={selectedPlaylist?._id === playlist._id}
-                  onSelect={setSelectedPlaylist}
-                  onDelete={handlePlaylistDelete}
-                />
-              ))}
-            </div>
+            <PlaylistCarousel
+              playlists={playlists}
+              selectedPlaylist={selectedPlaylist}
+              onSelect={setSelectedPlaylist}
+              onDelete={handlePlaylistDelete}
+            />
           </div>
         </section>
       )}
