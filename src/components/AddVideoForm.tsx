@@ -89,98 +89,143 @@ export function AddVideoForm({ playlists, onPlaylistCreated, onVideoAdded }: Add
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-4xl mx-auto bg-white rounded-xl shadow-lg border border-gray-100 p-6"
+      className="w-full max-w-5xl mx-auto"
+      id="home"
     >
-      <div className="text-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">DevList</h1>
-        <p className="text-gray-600">Organize your YouTube videos with ease</p>
-      </div>
-
-      <div className="space-y-4">
-        {/* Playlist Selection/Creation */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Select Playlist
-            </label>
-            <Select value={selectedPlaylistId} onValueChange={setSelectedPlaylistId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Choose a playlist..." />
-              </SelectTrigger>
-              <SelectContent>
-                {playlists.map((playlist) => (
-                  <SelectItem key={playlist._id} value={playlist._id || ''}>
-                    {playlist.name} ({playlist.videos.length} videos)
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-end">
-            <Button
-              variant="outline"
-              onClick={() => setShowCreateForm(!showCreateForm)}
-              className="flex items-center gap-2"
-            >
-              {showCreateForm ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              {showCreateForm ? 'Cancel' : 'Create New'}
-            </Button>
-          </div>
-        </div>
-
-        {/* Create New Playlist Form */}
-        <AnimatePresence>
-          {showCreateForm && (
+      {/* Hero Section with Gradient Background */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-gray-200/50 shadow-2xl">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-transparent to-purple-500/5"></div>
+        
+        <div className="relative p-8 lg:p-12">
+          {/* Header */}
+          <div className="text-center mb-8">
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="flex gap-4"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl mb-4 shadow-lg"
             >
-              <Input
-                placeholder="Enter playlist name..."
-                value={newPlaylistName}
-                onChange={(e) => setNewPlaylistName(e.target.value)}
-                className="flex-1"
-              />
-              <Button
-                onClick={handleCreatePlaylist}
-                disabled={isLoading || !newPlaylistName.trim()}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Create
-              </Button>
+              <Play className="h-8 w-8 text-white" />
             </motion.div>
-          )}
-        </AnimatePresence>
+            <motion.h1
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-3"
+            >
+              DevList
+            </motion.h1>
+            <motion.p
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="text-lg text-gray-600 max-w-2xl mx-auto"
+            >
+              Organize your YouTube videos with ease and track your learning progress
+            </motion.p>
+          </div>
 
-        {/* Video URL Input */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            YouTube Video URL
-          </label>
-          <Input
-            placeholder="https://www.youtube.com/watch?v=..."
-            value={videoUrl}
-            onChange={(e) => setVideoUrl(e.target.value)}
-            className="mb-2"
-          />
-          <Input
-            placeholder="Add a note (optional)"
-            value={videoNote}
-            onChange={(e) => setVideoNote(e.target.value)}
-            className="mb-4"
-          />
-          <Button
-            onClick={handleAddVideo}
-            disabled={isLoading || !selectedPlaylistId || !videoUrl.trim()}
-            className="w-full flex items-center justify-center gap-2"
-          >
-            <Play className="h-4 w-4" />
-            Add to Playlist
-          </Button>
+          {/* Form Container */}
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-white/50 shadow-xl p-6 lg:p-8">
+            <div className="space-y-6">
+              {/* Playlist Selection/Creation */}
+              <div className="flex flex-col lg:flex-row gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Select Playlist
+                  </label>
+                  <Select value={selectedPlaylistId} onValueChange={setSelectedPlaylistId}>
+                    <SelectTrigger className="h-12 bg-white/80 border-gray-200/50 rounded-xl hover:bg-white transition-colors">
+                      <SelectValue placeholder="Choose a playlist..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {playlists.map((playlist) => (
+                        <SelectItem key={playlist._id} value={playlist._id || ''}>
+                          {playlist.name} ({playlist.videos.length} videos)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowCreateForm(!showCreateForm)}
+                    className="flex items-center gap-2 h-12 px-6 rounded-xl border-gray-200/50 hover:bg-gray-50/80 transition-colors"
+                  >
+                    {showCreateForm ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    {showCreateForm ? 'Cancel' : 'Create New'}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Create New Playlist Form */}
+              <AnimatePresence>
+                {showCreateForm && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex gap-4"
+                  >
+                    <Input
+                      placeholder="Enter playlist name..."
+                      value={newPlaylistName}
+                      onChange={(e) => setNewPlaylistName(e.target.value)}
+                      className="flex-1 h-12 bg-white/80 border-gray-200/50 rounded-xl hover:bg-white transition-colors"
+                    />
+                    <Button
+                      onClick={handleCreatePlaylist}
+                      disabled={isLoading || !newPlaylistName.trim()}
+                      className="flex items-center gap-2 h-12 px-6 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl shadow-lg hover:shadow-xl transition-all"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Create
+                    </Button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Video URL Input */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    YouTube Video URL
+                  </label>
+                  <Input
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    className="h-12 bg-white/80 border-gray-200/50 rounded-xl hover:bg-white transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Note (Optional)
+                  </label>
+                  <Input
+                    placeholder="Add a personal note about this video..."
+                    value={videoNote}
+                    onChange={(e) => setVideoNote(e.target.value)}
+                    className="h-12 bg-white/80 border-gray-200/50 rounded-xl hover:bg-white transition-colors"
+                  />
+                </div>
+                <Button
+                  onClick={handleAddVideo}
+                  disabled={isLoading || !selectedPlaylistId || !videoUrl.trim()}
+                  className="w-full h-14 flex items-center justify-center gap-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl shadow-lg hover:shadow-xl transition-all text-white font-semibold text-lg"
+                >
+                  <Play className="h-5 w-5" />
+                  Add to Playlist
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </motion.div>

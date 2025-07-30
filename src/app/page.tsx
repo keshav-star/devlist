@@ -6,6 +6,7 @@ import { AddVideoForm } from '@/components/AddVideoForm'
 import { VideoPlayerSection } from '@/components/VideoPlayerSection'
 import { PlaylistCard } from '@/components/PlaylistCard'
 import { LandingSection } from '@/components/LandingSection'
+import { FloatingNavbar } from '@/components/FloatingNavbar'
 import { PlaylistType } from '@/models/Playlist'
 
 export default function Home() {
@@ -115,9 +116,12 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
+      {/* Floating Navbar */}
+      <FloatingNavbar />
+
       {/* Hero Section */}
-      <section className="py-8 px-4">
+      <section className="pt-24 pb-12 px-4">
         <AddVideoForm
           playlists={playlists}
           onPlaylistCreated={handlePlaylistCreated}
@@ -126,7 +130,7 @@ export default function Home() {
       </section>
 
       {/* Video Player Section */}
-      <section className="py-8 px-4">
+      <section id="player" className="py-12 px-4">
         <VideoPlayerSection
           selectedPlaylist={selectedPlaylist}
           onVideoStatusUpdate={handleVideoStatusUpdate}
@@ -137,14 +141,18 @@ export default function Home() {
 
       {/* All Playlists Section */}
       {playlists.length > 0 && (
-        <section className="py-8 px-4">
+        <section id="playlists" className="py-12 px-4">
           <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">All Playlists</h2>
-              <p className="text-gray-600">Manage and organize your video collections</p>
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-4">
+                All Playlists
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Manage and organize your video collections with ease
+              </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {playlists.map((playlist, index) => (
                 <PlaylistCard
                   key={playlist._id}

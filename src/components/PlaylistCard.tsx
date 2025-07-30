@@ -28,18 +28,21 @@ export function PlaylistCard({ playlist, isSelected, onSelect, onDelete }: Playl
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4 }}
-      className={`relative p-6 rounded-xl border-2 transition-all cursor-pointer ${
+      whileHover={{ y: -4, scale: 1.02 }}
+      className={`relative p-8 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
         isSelected 
-          ? 'border-blue-500 bg-blue-50 shadow-lg' 
-          : 'border-gray-200 hover:border-gray-300 bg-white hover:shadow-md'
+          ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-purple-50 shadow-xl' 
+          : 'border-gray-200/50 hover:border-gray-300 bg-white/70 backdrop-blur-sm hover:shadow-lg'
       }`}
       onClick={() => onSelect(playlist)}
     >
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-6">
         <div className="flex-1">
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">{playlist.name}</h3>
-          <p className="text-sm text-gray-500">
+          <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-3">
+            {playlist.name}
+          </h3>
+          <p className="text-sm text-gray-600 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></span>
             Created {formatDate(new Date(playlist.createdAt))}
           </p>
         </div>
@@ -52,48 +55,52 @@ export function PlaylistCard({ playlist, isSelected, onSelect, onDelete }: Playl
               onDelete(playlist._id || '')
             }
           }}
-          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+          className="text-red-500 hover:text-red-700 hover:bg-red-50/50 p-2 rounded-xl"
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-5 w-5" />
         </Button>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Play className="h-5 w-5 text-blue-500" />
-          <span className="text-lg font-semibold text-gray-900">{playlist.videos.length}</span>
-          <span className="text-sm text-gray-500">videos</span>
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+            <Play className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <span className="text-2xl font-bold text-gray-900">{playlist.videos.length}</span>
+            <span className="text-sm text-gray-600 ml-1">videos</span>
+          </div>
         </div>
 
         {playlist.videos.length > 0 && (
-          <div className="grid grid-cols-3 gap-2">
-            <div className="flex items-center gap-1 text-xs">
-              <Clock className="h-3 w-3 text-yellow-500" />
-              <span className="text-yellow-700">{statusCounts['to-watch']}</span>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="flex items-center gap-2 text-sm bg-yellow-50/50 p-2 rounded-lg">
+              <Clock className="h-4 w-4 text-yellow-600" />
+              <span className="font-semibold text-yellow-700">{statusCounts['to-watch']}</span>
             </div>
-            <div className="flex items-center gap-1 text-xs">
-              <Eye className="h-3 w-3 text-blue-500" />
-              <span className="text-blue-700">{statusCounts['watching']}</span>
+            <div className="flex items-center gap-2 text-sm bg-blue-50/50 p-2 rounded-lg">
+              <Eye className="h-4 w-4 text-blue-600" />
+              <span className="font-semibold text-blue-700">{statusCounts['watching']}</span>
             </div>
-            <div className="flex items-center gap-1 text-xs">
-              <CheckCircle className="h-3 w-3 text-green-500" />
-              <span className="text-green-700">{statusCounts['watched']}</span>
+            <div className="flex items-center gap-2 text-sm bg-green-50/50 p-2 rounded-lg">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <span className="font-semibold text-green-700">{statusCounts['watched']}</span>
             </div>
           </div>
         )}
 
         {playlist.videos.length > 0 && (
-          <div className="pt-2 border-t border-gray-100">
-            <div className="flex items-center gap-2">
-              <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="pt-4 border-t border-gray-200/50">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-3 bg-gray-200/50 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-gradient-to-r from-yellow-400 via-blue-500 to-green-500 rounded-full"
+                  className="h-full bg-gradient-to-r from-yellow-400 via-blue-500 to-green-500 rounded-full transition-all duration-500"
                   style={{ 
                     width: `${(statusCounts['watched'] / playlist.videos.length) * 100}%` 
                   }}
                 />
               </div>
-              <span className="text-xs text-gray-500">
+              <span className="text-sm font-semibold text-gray-700">
                 {Math.round((statusCounts['watched'] / playlist.videos.length) * 100)}% complete
               </span>
             </div>
@@ -102,8 +109,8 @@ export function PlaylistCard({ playlist, isSelected, onSelect, onDelete }: Playl
       </div>
 
       {isSelected && (
-        <div className="absolute top-2 right-2">
-          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+        <div className="absolute top-4 right-4">
+          <div className="w-4 h-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full shadow-lg"></div>
         </div>
       )}
     </motion.div>
