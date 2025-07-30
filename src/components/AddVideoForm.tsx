@@ -6,45 +6,38 @@ import { Plus, Play, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Loading } from '@/components/ui/loading'
 import { extractYouTubeId } from '@/lib/utils'
+import { useCreatePlaylist, useAddVideo } from '@/lib/api'
 import { PlaylistType } from '@/models/Playlist'
 
 interface AddVideoFormProps {
   playlists: PlaylistType[]
   onPlaylistCreated: (playlist: PlaylistType) => void
-  onVideoAdded: () => void
 }
 
-export function AddVideoForm({ playlists, onPlaylistCreated, onVideoAdded }: AddVideoFormProps) {
+export function AddVideoForm({ playlists, onPlaylistCreated }: AddVideoFormProps) {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [selectedPlaylistId, setSelectedPlaylistId] = useState('')
   const [newPlaylistName, setNewPlaylistName] = useState('')
   const [videoUrl, setVideoUrl] = useState('')
   const [videoNote, setVideoNote] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+
+  // React Query mutations
+  const createPlaylistMutation = useCreatePlaylist()
+  const addVideoMutation = useAddVideo()
 
   const handleCreatePlaylist = async () => {
     if (!newPlaylistName.trim()) return
 
-    setIsLoading(true)
     try {
-      const response = await fetch('/api/playlists', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newPlaylistName.trim() })
-      })
-
-      if (response.ok) {
-        const playlist = await response.json()
-        onPlaylistCreated(playlist)
-        setSelectedPlaylistId(playlist._id)
-        setNewPlaylistName('')
-        setShowCreateForm(false)
-      }
+      const playlist = await createPlaylistMutation.mutateAsync({ name: newPlaylistName.trim() })
+      onPlaylistCreated(playlist)
+      setSelectedPlaylistId(playlist._id || '')
+      setNewPlaylistName('')
+      setShowCreateForm(false)
     } catch (error) {
       console.error('Failed to create playlist:', error)
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -57,31 +50,24 @@ export function AddVideoForm({ playlists, onPlaylistCreated, onVideoAdded }: Add
       return
     }
 
-    setIsLoading(true)
     try {
       // For demo purposes, we'll use a placeholder title
       // In a real app, you'd fetch the actual video title from YouTube API
       const videoTitle = `Video ${Date.now()}`
 
-      const response = await fetch(`/api/playlists/${selectedPlaylistId}/videos`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      await addVideoMutation.mutateAsync({
+        playlistId: selectedPlaylistId,
+        data: {
           title: videoTitle,
           youtubeId,
           note: videoNote.trim()
-        })
+        }
       })
 
-      if (response.ok) {
-        setVideoUrl('')
-        setVideoNote('')
-        onVideoAdded()
-      }
+      setVideoUrl('')
+      setVideoNote('')
     } catch (error) {
       console.error('Failed to add video:', error)
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -179,14 +165,18 @@ export function AddVideoForm({ playlists, onPlaylistCreated, onVideoAdded }: Add
                       onChange={(e) => setNewPlaylistName(e.target.value)}
                       className="flex-1 h-12 bg-white/80 border-gray-200/50 rounded-xl hover:bg-white transition-colors"
                     />
-                    <Button
-                      onClick={handleCreatePlaylist}
-                      disabled={isLoading || !newPlaylistName.trim()}
-                      className="flex items-center gap-2 h-12 px-6 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl shadow-lg hover:shadow-xl transition-all"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Create
-                    </Button>
+                                  <Button
+                onClick={handleCreatePlaylist}
+                disabled={createPlaylistMutation.isPending || !newPlaylistName.trim()}
+                className="flex items-center gap-2 h-12 px-6 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl shadow-lg hover:shadow-xl transition-all"
+              >
+                {createPlaylistMutation.isPending ? (
+                  <Loading size="sm" variant="spinner" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+                {createPlaylistMutation.isPending ? 'Creating...' : 'Create'}
+              </Button>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -215,14 +205,18 @@ export function AddVideoForm({ playlists, onPlaylistCreated, onVideoAdded }: Add
                     className="h-12 bg-white/80 border-gray-200/50 rounded-xl hover:bg-white transition-colors"
                   />
                 </div>
-                <Button
-                  onClick={handleAddVideo}
-                  disabled={isLoading || !selectedPlaylistId || !videoUrl.trim()}
-                  className="w-full h-14 flex items-center justify-center gap-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl shadow-lg hover:shadow-xl transition-all text-white font-semibold text-lg"
-                >
-                  <Play className="h-5 w-5" />
-                  Add to Playlist
-                </Button>
+                                  <Button
+                    onClick={handleAddVideo}
+                    disabled={addVideoMutation.isPending || !selectedPlaylistId || !videoUrl.trim()}
+                    className="w-full h-14 flex items-center justify-center gap-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl shadow-lg hover:shadow-xl transition-all text-white font-semibold text-lg"
+                  >
+                    {addVideoMutation.isPending ? (
+                      <Loading size="sm" variant="spinner" />
+                    ) : (
+                      <Play className="h-5 w-5" />
+                    )}
+                    {addVideoMutation.isPending ? 'Adding...' : 'Add to Playlist'}
+                  </Button>
               </div>
             </div>
           </div>

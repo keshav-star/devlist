@@ -3,7 +3,9 @@
 import { motion } from 'framer-motion'
 import { Play, Clock, Eye, EyeOff, CheckCircle, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Loading } from '@/components/ui/loading'
 import { formatDate, getStatusColor } from '@/lib/utils'
+import { useDeletePlaylist } from '@/lib/api'
 import { PlaylistType } from '@/models/Playlist'
 
 interface PlaylistCardProps {
@@ -14,6 +16,8 @@ interface PlaylistCardProps {
 }
 
 export function PlaylistCard({ playlist, isSelected, onSelect, onDelete }: PlaylistCardProps) {
+  const deletePlaylistMutation = useDeletePlaylist()
+  
   const getStatusCounts = () => {
     const counts = { 'to-watch': 0, 'watching': 0, 'watched': 0 }
     playlist.videos.forEach(video => {
@@ -23,6 +27,17 @@ export function PlaylistCard({ playlist, isSelected, onSelect, onDelete }: Playl
   }
 
   const statusCounts = getStatusCounts()
+
+  const handleDelete = async () => {
+    if (confirm('Are you sure you want to delete this playlist?')) {
+      try {
+        await deletePlaylistMutation.mutateAsync(playlist._id || '')
+        onDelete(playlist._id || '')
+      } catch (error) {
+        console.error('Failed to delete playlist:', error)
+      }
+    }
+  }
 
   return (
     <motion.div
@@ -51,13 +66,16 @@ export function PlaylistCard({ playlist, isSelected, onSelect, onDelete }: Playl
           size="sm"
           onClick={(e) => {
             e.stopPropagation()
-            if (confirm('Are you sure you want to delete this playlist?')) {
-              onDelete(playlist._id || '')
-            }
+            handleDelete()
           }}
+          disabled={deletePlaylistMutation.isPending}
           className="text-red-500 hover:text-red-700 hover:bg-red-50/50 p-2 rounded-xl"
         >
-          <Trash2 className="h-5 w-5" />
+          {deletePlaylistMutation.isPending ? (
+            <Loading size="sm" variant="spinner" />
+          ) : (
+            <Trash2 className="h-5 w-5" />
+          )}
         </Button>
       </div>
 

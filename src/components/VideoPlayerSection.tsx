@@ -6,7 +6,9 @@ import { Play, Eye, EyeOff, Clock, Trash2, Edit3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Loading } from '@/components/ui/loading'
 import { getStatusColor, formatDate } from '@/lib/utils'
+import { useUpdateVideo, useDeleteVideo } from '@/lib/api'
 import { PlaylistType, VideoType } from '@/models/Playlist'
 
 interface VideoPlayerSectionProps {
@@ -26,6 +28,10 @@ export function VideoPlayerSection({
   const [editingNoteId, setEditingNoteId] = useState<string>('')
   const [editingNote, setEditingNote] = useState('')
   const [sortBy, setSortBy] = useState<'added' | 'status'>('added')
+
+  // React Query mutations
+  const updateVideoMutation = useUpdateVideo()
+  const deleteVideoMutation = useDeleteVideo()
 
   if (!selectedPlaylist) {
     return (
@@ -59,15 +65,12 @@ export function VideoPlayerSection({
 
   const handleStatusUpdate = async (videoId: string, status: 'to-watch' | 'watching' | 'watched') => {
     try {
-      const response = await fetch(`/api/playlists/${selectedPlaylist._id}/videos/${videoId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
+      await updateVideoMutation.mutateAsync({
+        playlistId: selectedPlaylist._id || '',
+        videoId,
+        data: { status }
       })
-
-      if (response.ok) {
-        onVideoStatusUpdate(videoId, status)
-      }
+      onVideoStatusUpdate(videoId, status)
     } catch (error) {
       console.error('Failed to update video status:', error)
     }
@@ -77,15 +80,13 @@ export function VideoPlayerSection({
     if (!confirm('Are you sure you want to delete this video?')) return
 
     try {
-      const response = await fetch(`/api/playlists/${selectedPlaylist._id}/videos/${videoId}`, {
-        method: 'DELETE'
+      await deleteVideoMutation.mutateAsync({
+        playlistId: selectedPlaylist._id || '',
+        videoId
       })
-
-      if (response.ok) {
-        onVideoDelete(videoId)
-        if (currentVideoId === videoId) {
-          setCurrentVideoId('')
-        }
+      onVideoDelete(videoId)
+      if (currentVideoId === videoId) {
+        setCurrentVideoId('')
       }
     } catch (error) {
       console.error('Failed to delete video:', error)
@@ -94,17 +95,14 @@ export function VideoPlayerSection({
 
   const handleNoteUpdate = async (videoId: string) => {
     try {
-      const response = await fetch(`/api/playlists/${selectedPlaylist._id}/videos/${videoId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ note: editingNote })
+      await updateVideoMutation.mutateAsync({
+        playlistId: selectedPlaylist._id || '',
+        videoId,
+        data: { note: editingNote }
       })
-
-      if (response.ok) {
-        onVideoNoteUpdate(videoId, editingNote)
-        setEditingNoteId('')
-        setEditingNote('')
-      }
+      onVideoNoteUpdate(videoId, editingNote)
+      setEditingNoteId('')
+      setEditingNote('')
     } catch (error) {
       console.error('Failed to update video note:', error)
     }
@@ -216,44 +214,55 @@ export function VideoPlayerSection({
                     )}
                   </div>
                   <div className="flex flex-col gap-1">
-                    <Select
-                      value={video.status}
-                      onValueChange={(status: 'to-watch' | 'watching' | 'watched') => 
-                        handleStatusUpdate(video._id || '', status)
-                      }
-                    >
-                      <SelectTrigger className="w-20 h-6 text-xs">
+                                      <Select
+                    value={video.status}
+                    onValueChange={(status: 'to-watch' | 'watching' | 'watched') => 
+                      handleStatusUpdate(video._id || '', status)
+                    }
+                    disabled={updateVideoMutation.isPending}
+                  >
+                    <SelectTrigger className="w-20 h-6 text-xs">
+                      {updateVideoMutation.isPending ? (
+                        <Loading size="sm" variant="spinner" />
+                      ) : (
                         <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="to-watch">To Watch</SelectItem>
-                        <SelectItem value="watching">Watching</SelectItem>
-                        <SelectItem value="watched">Watched</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setEditingNoteId(video._id || '')
-                        setEditingNote(video.note || '')
-                      }}
-                      className="h-6 w-6 p-0"
-                    >
-                      <Edit3 className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDeleteVideo(video._id || '')
-                      }}
-                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                    >
+                      )}
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="to-watch">To Watch</SelectItem>
+                      <SelectItem value="watching">Watching</SelectItem>
+                      <SelectItem value="watched">Watched</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setEditingNoteId(video._id || '')
+                      setEditingNote(video.note || '')
+                    }}
+                    disabled={updateVideoMutation.isPending}
+                    className="h-6 w-6 p-0"
+                  >
+                    <Edit3 className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDeleteVideo(video._id || '')
+                    }}
+                    disabled={deleteVideoMutation.isPending}
+                    className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                  >
+                    {deleteVideoMutation.isPending ? (
+                      <Loading size="sm" variant="spinner" />
+                    ) : (
                       <Trash2 className="h-3 w-3" />
-                    </Button>
+                    )}
+                  </Button>
                   </div>
                 </div>
               </motion.div>
@@ -292,15 +301,21 @@ export function VideoPlayerSection({
                 <Button 
                   variant="outline" 
                   onClick={() => setEditingNoteId('')}
+                  disabled={updateVideoMutation.isPending}
                   className="h-12 px-6 rounded-xl border-gray-200/50 hover:bg-gray-50/80"
                 >
                   Cancel
                 </Button>
                 <Button 
                   onClick={() => handleNoteUpdate(editingNoteId)}
+                  disabled={updateVideoMutation.isPending}
                   className="h-12 px-6 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl"
                 >
-                  Save
+                  {updateVideoMutation.isPending ? (
+                    <Loading size="sm" variant="spinner" />
+                  ) : (
+                    'Save'
+                  )}
                 </Button>
               </div>
             </motion.div>

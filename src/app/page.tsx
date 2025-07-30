@@ -1,47 +1,29 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { AddVideoForm } from '@/components/AddVideoForm'
 import { VideoPlayerSection } from '@/components/VideoPlayerSection'
 import { PlaylistCard } from '@/components/PlaylistCard'
 import { LandingSection } from '@/components/LandingSection'
 import { FloatingNavbar } from '@/components/FloatingNavbar'
+import { Loading } from '@/components/ui/loading'
+import { usePlaylists } from '@/lib/api'
 import { PlaylistType } from '@/models/Playlist'
 
 export default function Home() {
-  const [playlists, setPlaylists] = useState<PlaylistType[]>([])
   const [selectedPlaylist, setSelectedPlaylist] = useState<PlaylistType | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  
+  // React Query hooks
+  const { data: playlists = [], isLoading, error } = usePlaylists()
 
-  useEffect(() => {
-    fetchPlaylists()
-  }, [])
-
-  const fetchPlaylists = async () => {
-    try {
-      const response = await fetch('/api/playlists')
-      if (response.ok) {
-        const data = await response.json()
-        setPlaylists(data)
-        if (data.length > 0 && !selectedPlaylist) {
-          setSelectedPlaylist(data[0])
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch playlists:', error)
-    } finally {
-      setIsLoading(false)
-    }
+  // Set first playlist as selected when data loads
+  if (playlists.length > 0 && !selectedPlaylist) {
+    setSelectedPlaylist(playlists[0])
   }
 
   const handlePlaylistCreated = (newPlaylist: PlaylistType) => {
-    setPlaylists(prev => [newPlaylist, ...prev])
     setSelectedPlaylist(newPlaylist)
-  }
-
-  const handleVideoAdded = () => {
-    fetchPlaylists()
   }
 
   const handleVideoStatusUpdate = (videoId: string, status: 'to-watch' | 'watching' | 'watched') => {
@@ -53,9 +35,6 @@ export default function Home() {
         )
       }
       setSelectedPlaylist(updatedPlaylist)
-      setPlaylists(prev => prev.map(playlist =>
-        playlist._id === selectedPlaylist._id ? updatedPlaylist : playlist
-      ))
     }
   }
 
@@ -66,9 +45,6 @@ export default function Home() {
         videos: selectedPlaylist.videos.filter(video => video._id !== videoId)
       }
       setSelectedPlaylist(updatedPlaylist)
-      setPlaylists(prev => prev.map(playlist =>
-        playlist._id === selectedPlaylist._id ? updatedPlaylist : playlist
-      ))
     }
   }
 
@@ -81,35 +57,33 @@ export default function Home() {
         )
       }
       setSelectedPlaylist(updatedPlaylist)
-      setPlaylists(prev => prev.map(playlist =>
-        playlist._id === selectedPlaylist._id ? updatedPlaylist : playlist
-      ))
     }
   }
 
-  const handlePlaylistDelete = async (playlistId: string) => {
-    try {
-      const response = await fetch(`/api/playlists/${playlistId}`, {
-        method: 'DELETE'
-      })
-
-      if (response.ok) {
-        setPlaylists(prev => prev.filter(playlist => playlist._id !== playlistId))
-        if (selectedPlaylist?._id === playlistId) {
-          setSelectedPlaylist(null)
-        }
-      }
-    } catch (error) {
-      console.error('Failed to delete playlist:', error)
+  const handlePlaylistDelete = (playlistId: string) => {
+    if (selectedPlaylist?._id === playlistId) {
+      setSelectedPlaylist(null)
     }
   }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading DevList...</p>
+          <Loading size="lg" text="Loading DevList..." variant="dots" />
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <p className="text-lg font-semibold">Error loading playlists</p>
+            <p className="text-sm">Please try refreshing the page</p>
+          </div>
         </div>
       </div>
     )
@@ -125,7 +99,6 @@ export default function Home() {
         <AddVideoForm
           playlists={playlists}
           onPlaylistCreated={handlePlaylistCreated}
-          onVideoAdded={handleVideoAdded}
         />
       </section>
 
