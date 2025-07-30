@@ -78,13 +78,28 @@ export function AddVideoForm({ playlists, onPlaylistCreated }: AddVideoFormProps
       className="w-full max-w-5xl mx-auto"
       id="home"
     >
-      {/* Hero Section with Gradient Background */}
+      {/* Hero Section with Beautiful Background */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-gray-200/50 shadow-2xl">
-        {/* Background Pattern */}
+        {/* Animated Background Elements */}
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
         
-        {/* Gradient Overlay */}
+        {/* Floating Orbs */}
+        <div className="absolute top-10 left-10 w-32 h-32 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-xl animate-float"></div>
+        <div className="absolute top-20 right-20 w-24 h-24 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-full blur-xl animate-glow"></div>
+        <div className="absolute bottom-10 left-1/3 w-20 h-20 bg-gradient-to-r from-indigo-400/20 to-blue-400/20 rounded-full blur-xl animate-float delay-1000"></div>
+        <div className="absolute top-1/2 right-1/4 w-16 h-16 bg-gradient-to-r from-cyan-400/20 to-blue-400/20 rounded-full blur-xl animate-glow delay-2000"></div>
+        
+        {/* Gradient Mesh */}
         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-transparent to-purple-500/5"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/30 to-purple-500/5"></div>
+        
+        {/* Subtle Pattern Overlay */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                             radial-gradient(circle at 75% 75%, rgba(147, 51, 234, 0.1) 0%, transparent 50%)`
+          }}></div>
+        </div>
         
         <div className="relative p-8 lg:p-12">
           {/* Header */}
@@ -101,7 +116,7 @@ export function AddVideoForm({ playlists, onPlaylistCreated }: AddVideoFormProps
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-3"
+              className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-3 animate-gradient"
             >
               DevList
             </motion.h1>
