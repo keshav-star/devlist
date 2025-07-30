@@ -4,20 +4,18 @@ import { Playlist, VideoType } from '@/models/Playlist'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string; videoId: string } }
+  context: { params: { id: string; videoId: string } }
 ) {
   try {
     await dbConnect()
     const { status, note } = await request.json()
-    
-    const playlist = await Playlist.findById(params.id)
-    
+
+    const playlist = await Playlist.findById(context.params.id)
     if (!playlist) {
       return NextResponse.json({ error: 'Playlist not found' }, { status: 404 })
     }
 
-    const video = playlist.videos.id(params.videoId)
-    
+    const video = playlist.videos.id(context.params.videoId)
     if (!video) {
       return NextResponse.json({ error: 'Video not found' }, { status: 404 })
     }
@@ -25,13 +23,12 @@ export async function PUT(
     if (status) {
       video.status = status
     }
-    
+
     if (note !== undefined) {
       video.note = note
     }
 
     await playlist.save()
-    
     return NextResponse.json(playlist)
   } catch (error) {
     return NextResponse.json({ error: 'Failed to update video' }, { status: 500 })
@@ -40,25 +37,23 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; videoId: string } }
+  context: { params: { id: string; videoId: string } }
 ) {
   try {
     await dbConnect()
-    
-    const playlist = await Playlist.findById(params.id)
-    
+
+    const playlist = await Playlist.findById(context.params.id)
     if (!playlist) {
       return NextResponse.json({ error: 'Playlist not found' }, { status: 404 })
     }
 
     playlist.videos = playlist.videos.filter(
-      (video: VideoType) => video._id?.toString() !== params.videoId
+      (video: VideoType) => video._id?.toString() !== context.params.videoId
     )
 
     await playlist.save()
-    
     return NextResponse.json({ message: 'Video deleted successfully' })
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete video' }, { status: 500 })
   }
-} 
+}
