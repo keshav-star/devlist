@@ -168,7 +168,7 @@ export function LandingSection() {
               Perfect For
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Whether you're a student, professional, or casual learner
+              Whether you &apos; re a student, professional, or casual learner
             </p>
           </div>
 

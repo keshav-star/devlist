@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db'
-import { Playlist } from '@/models/Playlist'
+import { Playlist, VideoType } from '@/models/Playlist'
 
 export async function PUT(
   request: NextRequest,
@@ -52,7 +52,7 @@ export async function DELETE(
     }
 
     playlist.videos = playlist.videos.filter(
-      (video: any) => video._id?.toString() !== params.videoId
+      (video: VideoType) => video._id?.toString() !== params.videoId
     )
 
     await playlist.save()

@@ -9,6 +9,7 @@ import { Loading } from '@/components/ui/loading'
 import { formatDate, getStatusColor } from '@/lib/utils'
 import { useDeletePlaylist } from '@/lib/api'
 import { PlaylistType } from '@/models/Playlist'
+import { UseMutationResult } from '@tanstack/react-query'
 
 interface PlaylistCarouselProps {
   playlists: PlaylistType[]
@@ -162,7 +163,7 @@ export function PlaylistCarousel({
           <Search className="h-10 w-10 text-gray-400" />
         </div>
         <h3 className="text-xl font-semibold text-gray-600 mb-2">No Playlists Found</h3>
-        <p className="text-gray-500 mb-4">No playlists match "{searchQuery}"</p>
+        <p className="text-gray-500 mb-4">No playlists match &quot;{searchQuery}&quot;</p>
         <Button
           onClick={clearSearch}
           variant="outline"
@@ -393,7 +394,7 @@ function PlaylistCard({
   isSelected: boolean
   onSelect: (playlist: PlaylistType) => void
   onDelete: (playlist: PlaylistType) => void
-  deleteMutation: any
+  deleteMutation: UseMutationResult<void, Error, string, unknown>
 }) {
   const getStatusCounts = () => {
     const counts = { 'to-watch': 0, 'watching': 0, 'watched': 0 }
