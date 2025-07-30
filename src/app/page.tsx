@@ -1,103 +1,166 @@
-import Image from "next/image";
+'use client'
+
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { AddVideoForm } from '@/components/AddVideoForm'
+import { VideoPlayerSection } from '@/components/VideoPlayerSection'
+import { PlaylistCard } from '@/components/PlaylistCard'
+import { LandingSection } from '@/components/LandingSection'
+import { PlaylistType } from '@/models/Playlist'
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [playlists, setPlaylists] = useState<PlaylistType[]>([])
+  const [selectedPlaylist, setSelectedPlaylist] = useState<PlaylistType | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    fetchPlaylists()
+  }, [])
+
+  const fetchPlaylists = async () => {
+    try {
+      const response = await fetch('/api/playlists')
+      if (response.ok) {
+        const data = await response.json()
+        setPlaylists(data)
+        if (data.length > 0 && !selectedPlaylist) {
+          setSelectedPlaylist(data[0])
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch playlists:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handlePlaylistCreated = (newPlaylist: PlaylistType) => {
+    setPlaylists(prev => [newPlaylist, ...prev])
+    setSelectedPlaylist(newPlaylist)
+  }
+
+  const handleVideoAdded = () => {
+    fetchPlaylists()
+  }
+
+  const handleVideoStatusUpdate = (videoId: string, status: 'to-watch' | 'watching' | 'watched') => {
+    if (selectedPlaylist) {
+      const updatedPlaylist = {
+        ...selectedPlaylist,
+        videos: selectedPlaylist.videos.map(video =>
+          video._id === videoId ? { ...video, status } : video
+        )
+      }
+      setSelectedPlaylist(updatedPlaylist)
+      setPlaylists(prev => prev.map(playlist =>
+        playlist._id === selectedPlaylist._id ? updatedPlaylist : playlist
+      ))
+    }
+  }
+
+  const handleVideoDelete = (videoId: string) => {
+    if (selectedPlaylist) {
+      const updatedPlaylist = {
+        ...selectedPlaylist,
+        videos: selectedPlaylist.videos.filter(video => video._id !== videoId)
+      }
+      setSelectedPlaylist(updatedPlaylist)
+      setPlaylists(prev => prev.map(playlist =>
+        playlist._id === selectedPlaylist._id ? updatedPlaylist : playlist
+      ))
+    }
+  }
+
+  const handleVideoNoteUpdate = (videoId: string, note: string) => {
+    if (selectedPlaylist) {
+      const updatedPlaylist = {
+        ...selectedPlaylist,
+        videos: selectedPlaylist.videos.map(video =>
+          video._id === videoId ? { ...video, note } : video
+        )
+      }
+      setSelectedPlaylist(updatedPlaylist)
+      setPlaylists(prev => prev.map(playlist =>
+        playlist._id === selectedPlaylist._id ? updatedPlaylist : playlist
+      ))
+    }
+  }
+
+  const handlePlaylistDelete = async (playlistId: string) => {
+    try {
+      const response = await fetch(`/api/playlists/${playlistId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        setPlaylists(prev => prev.filter(playlist => playlist._id !== playlistId))
+        if (selectedPlaylist?._id === playlistId) {
+          setSelectedPlaylist(null)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to delete playlist:', error)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading DevList...</p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section */}
+      <section className="py-8 px-4">
+        <AddVideoForm
+          playlists={playlists}
+          onPlaylistCreated={handlePlaylistCreated}
+          onVideoAdded={handleVideoAdded}
+        />
+      </section>
+
+      {/* Video Player Section */}
+      <section className="py-8 px-4">
+        <VideoPlayerSection
+          selectedPlaylist={selectedPlaylist}
+          onVideoStatusUpdate={handleVideoStatusUpdate}
+          onVideoDelete={handleVideoDelete}
+          onVideoNoteUpdate={handleVideoNoteUpdate}
+        />
+      </section>
+
+      {/* All Playlists Section */}
+      {playlists.length > 0 && (
+        <section className="py-8 px-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">All Playlists</h2>
+              <p className="text-gray-600">Manage and organize your video collections</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {playlists.map((playlist, index) => (
+                <PlaylistCard
+                  key={playlist._id}
+                  playlist={playlist}
+                  isSelected={selectedPlaylist?._id === playlist._id}
+                  onSelect={setSelectedPlaylist}
+                  onDelete={handlePlaylistDelete}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Landing Section */}
+      <LandingSection />
     </div>
-  );
+  )
 }
