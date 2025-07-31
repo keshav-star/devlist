@@ -8,6 +8,7 @@ export async function GET() {
     const playlists = await Playlist.find({}).sort({ createdAt: -1 })
     return NextResponse.json(playlists)
   } catch (error) {
+    console.log(error)
     return NextResponse.json({ error: 'Failed to fetch playlists' }, { status: 500 })
   }
 }
