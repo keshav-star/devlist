@@ -1,59 +1,73 @@
-import { NextRequest, NextResponse } from 'next/server'
-import dbConnect from '@/lib/db'
-import { Playlist, VideoType } from '@/models/Playlist'
+import { NextRequest, NextResponse } from "next/server";
+import dbConnect from "@/lib/db";
+import { Playlist, VideoType } from "@/models/Playlist";
 
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string; videoId: string } }
+  { params }: { params: Promise<{ id: string; videoId: string }> }
 ) {
+  const { id, videoId } = await params;
   try {
-    await dbConnect()
-    const { status, note } = await request.json()
+    await dbConnect();
+    const { status, note } = await request.json();
 
-    const playlist = await Playlist.findById(context.params.id)
+    const playlist = await Playlist.findById(id);
     if (!playlist) {
-      return NextResponse.json({ error: 'Playlist not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: "Playlist not found" },
+        { status: 404 }
+      );
     }
 
-    const video = playlist.videos.id(context.params.videoId)
+    const video = playlist.videos.id(videoId);
     if (!video) {
-      return NextResponse.json({ error: 'Video not found' }, { status: 404 })
+      return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
     if (status) {
-      video.status = status
+      video.status = status;
     }
 
     if (note !== undefined) {
-      video.note = note
+      video.note = note;
     }
 
-    await playlist.save()
-    return NextResponse.json(playlist)
+    await playlist.save();
+    return NextResponse.json(playlist);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update video' }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to update video" },
+      { status: 500 }
+    );
   }
 }
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string; videoId: string } }
+   { params }: { params: Promise<{ id: string; videoId: string }> }
 ) {
+   const { id, videoId } = await params;
   try {
-    await dbConnect()
+    await dbConnect();
 
-    const playlist = await Playlist.findById(context.params.id)
+    const playlist = await Playlist.findById(id);
     if (!playlist) {
-      return NextResponse.json({ error: 'Playlist not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: "Playlist not found" },
+        { status: 404 }
+      );
     }
 
     playlist.videos = playlist.videos.filter(
-      (video: VideoType) => video._id?.toString() !== context.params.videoId
-    )
+      (video: VideoType) => video._id?.toString() !== videoId
+    );
 
-    await playlist.save()
-    return NextResponse.json({ message: 'Video deleted successfully' })
+    await playlist.save();
+    return NextResponse.json({ message: "Video deleted successfully" });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete video' }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to delete video" },
+      { status: 500 }
+    );
   }
 }

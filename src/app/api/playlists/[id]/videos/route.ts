@@ -4,8 +4,9 @@ import { Playlist } from '@/models/Playlist'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+   { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id
   try {
     await dbConnect()
     const { title, youtubeId, note } = await request.json()
@@ -14,7 +15,7 @@ export async function POST(
       return NextResponse.json({ error: 'Title and YouTube ID are required' }, { status: 400 })
     }
 
-    const playlist = await Playlist.findById(params.id)
+    const playlist = await Playlist.findById(id)
     
     if (!playlist) {
       return NextResponse.json({ error: 'Playlist not found' }, { status: 404 })
