@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@config "../../tailwind.config.ts";
 
 @layer base {
   :root {
@@ -77,15 +78,18 @@
 
 /* Grid pattern background */
 .bg-grid-pattern {
-  background-image: 
-    linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+  background-image: linear-gradient(
+      rgba(59, 130, 246, 0.1) 1px,
+      transparent 1px
+    ),
     linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
   background-size: 20px 20px;
 }
 
 /* Custom animations for background elements */
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px) rotate(0deg);
   }
   50% {
@@ -94,7 +98,8 @@
 }
 
 @keyframes glow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.5;
     transform: scale(1);
   }
@@ -114,7 +119,8 @@
 
 /* Gradient text animation */
 @keyframes gradient-shift {
-  0%, 100% {
+  0%,
+  100% {
     background-position: 0% 50%;
   }
   50% {

@@ -10,6 +10,7 @@ import { Loading } from '@/components/ui/loading'
 import { extractYouTubeId } from '@/lib/utils'
 import { useCreatePlaylist, useAddVideo } from '@/lib/api'
 import { PlaylistType } from '@/models/Playlist'
+import { addVideoToPlaylist, createPlaylist } from '@/app/actions/playlist.actions'
 
 interface AddVideoFormProps {
   playlists: PlaylistType[]
@@ -31,7 +32,8 @@ export function AddVideoForm({ playlists, onPlaylistCreated }: AddVideoFormProps
     if (!newPlaylistName.trim()) return
 
     try {
-      const playlist = await createPlaylistMutation.mutateAsync({ name: newPlaylistName.trim() })
+      // const playlist = await createPlaylistMutation.mutateAsync({ name: newPlaylistName.trim() })
+      const playlist = await createPlaylist({ name: newPlaylistName.trim() })
       onPlaylistCreated(playlist)
       setSelectedPlaylistId(playlist._id || '')
       setNewPlaylistName('')
@@ -55,17 +57,18 @@ export function AddVideoForm({ playlists, onPlaylistCreated }: AddVideoFormProps
       // In a real app, you'd fetch the actual video title from YouTube API
       const videoTitle = `Video ${Date.now()}`
 
-      await addVideoMutation.mutateAsync({
-        playlistId: selectedPlaylistId,
-        data: {
-          title: videoTitle,
-          youtubeId,
-          note: videoNote.trim()
-        }
-      })
+      addVideoToPlaylist(selectedPlaylistId, { title: videoTitle, youtubeId, note: videoNote.trim() })
+      // await addVideoMutation.mutateAsync({
+      //   playlistId: selectedPlaylistId,
+      //   data: {
+      //     title: videoTitle,
+      //     youtubeId,
+      //     note: videoNote.trim()
+      //   }
+      // })
 
-      setVideoUrl('')
-      setVideoNote('')
+      // setVideoUrl('')
+      // setVideoNote('')
     } catch (error) {
       console.error('Failed to add video:', error)
     }
@@ -144,7 +147,7 @@ export function AddVideoForm({ playlists, onPlaylistCreated }: AddVideoFormProps
                       <SelectValue placeholder="Choose a playlist..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {playlists.map((playlist) => (
+                      {playlists.length>0 && playlists.map((playlist) => (
                         <SelectItem key={playlist._id} value={playlist._id || ''}>
                           {playlist.name} ({playlist.videos.length} videos)
                         </SelectItem>
@@ -182,7 +185,7 @@ export function AddVideoForm({ playlists, onPlaylistCreated }: AddVideoFormProps
                     />
                                   <Button
                 onClick={handleCreatePlaylist}
-                disabled={createPlaylistMutation.isPending || !newPlaylistName.trim()}
+                // disabled={createPlaylistMutation.isPending || !newPlaylistName.trim()}
                 className="flex items-center gap-2 h-12 px-6 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl shadow-lg hover:shadow-xl transition-all"
               >
                 {createPlaylistMutation.isPending ? (
