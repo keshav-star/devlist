@@ -12,9 +12,17 @@ const VideoSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  type: {
+    type: String,
+    enum: ["youtube", "link"],
+    default: "youtube",
+    required: true,
+  },
   youtubeId: {
     type: String,
-    required: true,
+  },
+  url: {
+    type: String,
   },
   status: {
     type: String,
@@ -53,14 +61,25 @@ export const Video =
   mongoose.models.Video || mongoose.model("Video", VideoSchema);
 export const User = mongoose.models.User || mongoose.model("User", UserSchema);
 
-export type VideoType = {
-  _id?: string;
-  title: string;
-  youtubeId: string;
-  status: "to-watch" | "watching" | "watched";
-  note?: string;
-  addedAt: Date;
-};
+export type VideoType =
+  | {
+      _id?: string;
+      type: "youtube";
+      title: string;
+      youtubeId: string;
+      status: "to-watch" | "watching" | "watched";
+      note?: string;
+      addedAt: Date;
+    }
+  | {
+      _id?: string;
+      type: "link";
+      title: string;
+      url: string;
+      status: "to-watch" | "watching" | "watched";
+      note?: string;
+      addedAt: Date;
+    };
 
 export type PlaylistType = {
   _id?: string;

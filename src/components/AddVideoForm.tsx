@@ -23,8 +23,12 @@ export function AddVideoForm({ playlists, onPlaylistCreated }: AddVideoFormProps
   const [newPlaylistName, setNewPlaylistName] = useState('')
   const [videoUrl, setVideoUrl] = useState('')
   const [videoNote, setVideoNote] = useState('')
+  const [sourceType, setSourceType] = useState<'youtube' | 'link'>('youtube')
+  const [isCreating, setIsCreating] = useState(false)
+  const [isAdding, setIsAdding] = useState(false)
 
   // React Query mutations
+  // Keeping hooks available for future API-based flow, but using server actions here
   const createPlaylistMutation = useCreatePlaylist()
   const addVideoMutation = useAddVideo()
 
@@ -32,6 +36,7 @@ export function AddVideoForm({ playlists, onPlaylistCreated }: AddVideoFormProps
     if (!newPlaylistName.trim()) return
 
     try {
+      setIsCreating(true)
       // const playlist = await createPlaylistMutation.mutateAsync({ name: newPlaylistName.trim() })
       const playlist = await createPlaylist({ name: newPlaylistName.trim() })
       onPlaylistCreated(playlist)
@@ -40,24 +45,45 @@ export function AddVideoForm({ playlists, onPlaylistCreated }: AddVideoFormProps
       setShowCreateForm(false)
     } catch (error) {
       console.error('Failed to create playlist:', error)
+    } finally {
+      setIsCreating(false)
     }
   }
 
   const handleAddVideo = async () => {
     if (!selectedPlaylistId || !videoUrl.trim()) return
 
-    const youtubeId = extractYouTubeId(videoUrl)
-    if (!youtubeId) {
-      alert('Please enter a valid YouTube URL')
+    if (sourceType === 'youtube') {
+      const youtubeId = extractYouTubeId(videoUrl)
+      if (!youtubeId) {
+        alert('Please enter a valid YouTube URL')
+        return
+      }
+
+      try {
+        setIsAdding(true)
+        const videoTitle = `Video ${Date.now()}`
+        await addVideoToPlaylist(selectedPlaylistId, { type: 'youtube', title: videoTitle, youtubeId, note: videoNote.trim() })
+        // Optionally clear inputs
+        // setVideoUrl(''); setVideoNote('')
+      } catch (error) {
+        console.error('Failed to add video:', error)
+      } finally {
+        setIsAdding(false)
+      }
       return
     }
 
+    // link type
     try {
-      // For demo purposes, we'll use a placeholder title
-      // In a real app, you'd fetch the actual video title from YouTube API
-      const videoTitle = `Video ${Date.now()}`
-
-      addVideoToPlaylist(selectedPlaylistId, { title: videoTitle, youtubeId, note: videoNote.trim() })
+      setIsAdding(true)
+      const isValidUrl = /^(https?:)\/\//i.test(videoUrl)
+      if (!isValidUrl) {
+        alert('Please enter a valid URL starting with http or https')
+        return
+      }
+      const tempTitle = new URL(videoUrl).hostname || `Link ${Date.now()}`
+      await addVideoToPlaylist(selectedPlaylistId, { type: 'link', title: tempTitle, url: videoUrl.trim(), note: videoNote.trim() })
       // await addVideoMutation.mutateAsync({
       //   playlistId: selectedPlaylistId,
       //   data: {
@@ -71,6 +97,8 @@ export function AddVideoForm({ playlists, onPlaylistCreated }: AddVideoFormProps
       // setVideoNote('')
     } catch (error) {
       console.error('Failed to add video:', error)
+    } finally {
+      setIsAdding(false)
     }
   }
 
@@ -183,30 +211,42 @@ export function AddVideoForm({ playlists, onPlaylistCreated }: AddVideoFormProps
                       onChange={(e) => setNewPlaylistName(e.target.value)}
                       className="flex-1 h-12 bg-white/80 border-gray-200/50 rounded-xl hover:bg-white transition-colors"
                     />
-                                  <Button
+              <Button
                 onClick={handleCreatePlaylist}
                 // disabled={createPlaylistMutation.isPending || !newPlaylistName.trim()}
                 className="flex items-center gap-2 h-12 px-6 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl shadow-lg hover:shadow-xl transition-all"
               >
-                {createPlaylistMutation.isPending ? (
+                {isCreating ? (
                   <Loading size="sm" variant="spinner" />
                 ) : (
                   <Plus className="h-4 w-4" />
                 )}
-                {createPlaylistMutation.isPending ? 'Creating...' : 'Create'}
+                {isCreating ? 'Creating...' : 'Create'}
               </Button>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* Video URL Input */}
+              {/* Source Type and URL Input */}
               <div className="space-y-4">
                 <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Source Type</label>
+                  <Select value={sourceType} onValueChange={(val: 'youtube' | 'link') => setSourceType(val)}>
+                    <SelectTrigger className="h-12 bg-white/80 border-gray-200/50 rounded-xl hover:bg-white transition-colors">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="youtube">YouTube</SelectItem>
+                      <SelectItem value="link">Website Link</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    YouTube Video URL
+                    {sourceType === 'youtube' ? 'YouTube Video URL' : 'Website URL'}
                   </label>
                   <Input
-                    placeholder="https://www.youtube.com/watch?v=..."
+                    placeholder={sourceType === 'youtube' ? 'https://www.youtube.com/watch?v=...' : 'https://example.com/article'}
                     value={videoUrl}
                     onChange={(e) => setVideoUrl(e.target.value)}
                     className="h-12 bg-white/80 border-gray-200/50 rounded-xl hover:bg-white transition-colors"
@@ -223,17 +263,17 @@ export function AddVideoForm({ playlists, onPlaylistCreated }: AddVideoFormProps
                     className="h-12 bg-white/80 border-gray-200/50 rounded-xl hover:bg-white transition-colors"
                   />
                 </div>
-                                  <Button
+                  <Button
                     onClick={handleAddVideo}
-                    disabled={addVideoMutation.isPending || !selectedPlaylistId || !videoUrl.trim()}
+                    disabled={isAdding || !selectedPlaylistId || !videoUrl.trim()}
                     className="w-full h-14 flex items-center justify-center gap-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl shadow-lg hover:shadow-xl transition-all text-white font-semibold text-lg"
                   >
-                    {addVideoMutation.isPending ? (
+                    {isAdding ? (
                       <Loading size="sm" variant="spinner" />
                     ) : (
                       <Play className="h-5 w-5" />
                     )}
-                    {addVideoMutation.isPending ? 'Adding...' : 'Add to Playlist'}
+                    {isAdding ? 'Adding...' : 'Add to Playlist'}
                   </Button>
               </div>
             </div>

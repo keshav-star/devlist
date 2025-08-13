@@ -9,10 +9,17 @@ export async function POST(
   const id = (await params).id
   try {
     await dbConnect()
-    const { title, youtubeId, note } = await request.json()
+    const { title, type = 'youtube', youtubeId, url, note } = await request.json()
     
-    if (!title || !youtubeId) {
-      return NextResponse.json({ error: 'Title and YouTube ID are required' }, { status: 400 })
+    if (!title) {
+      return NextResponse.json({ error: 'Title is required' }, { status: 400 })
+    }
+
+    if (type === 'youtube' && !youtubeId) {
+      return NextResponse.json({ error: 'YouTube ID is required for youtube type' }, { status: 400 })
+    }
+    if (type === 'link' && !url) {
+      return NextResponse.json({ error: 'URL is required for link type' }, { status: 400 })
     }
 
     const playlist = await Playlist.findById(id)
@@ -21,13 +28,23 @@ export async function POST(
       return NextResponse.json({ error: 'Playlist not found' }, { status: 404 })
     }
 
-    const newVideo = {
-      title,
-      youtubeId,
-      note: note || '',
-      status: 'to-watch' as const,
-      addedAt: new Date()
-    }
+    const newVideo = type === 'youtube'
+      ? {
+          title,
+          type: 'youtube' as const,
+          youtubeId,
+          note: note || '',
+          status: 'to-watch' as const,
+          addedAt: new Date(),
+        }
+      : {
+          title,
+          type: 'link' as const,
+          url,
+          note: note || '',
+          status: 'to-watch' as const,
+          addedAt: new Date(),
+        }
 
     playlist.videos.push(newVideo)
     await playlist.save()

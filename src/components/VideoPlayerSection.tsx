@@ -2,14 +2,14 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Play, Eye, EyeOff, Clock, Trash2, Edit3 } from 'lucide-react'
+import { Play, Clock, Trash2, Edit3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loading } from '@/components/ui/loading'
 import { getStatusColor, formatDate } from '@/lib/utils'
 import { useUpdateVideo, useDeleteVideo } from '@/lib/api'
-import { PlaylistType, VideoType } from '@/models/Playlist'
+import { PlaylistType } from '@/models/Playlist'
 
 interface VideoPlayerSectionProps {
   selectedPlaylist: PlaylistType | null
@@ -142,13 +142,24 @@ export function VideoPlayerSection({
           <div className="xl:col-span-2">
             {currentVideo ? (
               <div className="space-y-6">
-                <div className="aspect-video bg-gray-900 rounded-2xl overflow-hidden shadow-2xl border border-gray-200/20">
-                  <iframe
-                    src={`https://www.youtube.com/embed/${currentVideo.youtubeId}`}
-                    title={currentVideo.title}
-                    className="w-full h-full"
-                    allowFullScreen
-                  />
+                <div className="relative aspect-video bg-gray-900 rounded-2xl overflow-hidden shadow-2xl border border-gray-200/20">
+                  {currentVideo.type === 'youtube' ? (
+                    <iframe
+                      src={`https://www.youtube.com/embed/${(currentVideo as any).youtubeId}`}
+                      title={currentVideo.title}
+                      className="w-full h-full"
+                      allowFullScreen
+                      // onLoad={() => setIsFrameLoading(false)}
+                    />
+                  ) : (
+                    <iframe
+                      src={(currentVideo as any).url}
+                      title={currentVideo.title}
+                      className="w-full h-full bg-white"
+                      sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                      onLoad={() => setIsFrameLoading(false)}
+                    />
+                  )}
                 </div>
                 <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
                   <h3 className="text-xl font-bold text-gray-900 mb-4">{currentVideo.title}</h3>
@@ -196,11 +207,19 @@ export function VideoPlayerSection({
                 onClick={() => setCurrentVideoId(video._id || '')}
               >
                 <div className="flex items-start gap-4">
-                  <img
-                    src={`https://img.youtube.com/vi/${video.youtubeId}/mqdefault.jpg`}
-                    alt={video.title}
-                    className="w-20 h-14 rounded-xl object-cover flex-shrink-0 shadow-md"
-                  />
+                  {video.type === 'youtube' ? (
+                    <img
+                      src={`https://img.youtube.com/vi/${(video as any).youtubeId}/mqdefault.jpg`}
+                      alt={video.title}
+                      className="w-20 h-14 rounded-xl object-cover flex-shrink-0 shadow-md"
+                    />
+                  ) : (
+                    <img
+                      src={'/window.svg'}
+                      alt={video.title}
+                      className="w-20 h-14 rounded-xl object-cover flex-shrink-0 shadow-md bg-gray-100 p-2"
+                    />
+                  )}
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-semibold text-gray-900 truncate mb-2">{video.title}</h4>
                     <div className="flex items-center gap-2 mb-2">

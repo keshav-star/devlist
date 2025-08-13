@@ -8,10 +8,12 @@ type VideoStatus = "to-watch" | "watching" | "watched";
 const addVideoToPlaylist = async (
   id: string,
   {
+    type,
     title,
     youtubeId,
+    url,
     note,
-  }: { title: string; youtubeId: string; note?: string }
+  }: { type: "youtube" | "link"; title: string; youtubeId?: string; url?: string; note?: string }
 ) => {
   try {
     await dbConnect();
@@ -21,13 +23,24 @@ const addVideoToPlaylist = async (
       throw new Error("Playlist not found");
     }
 
-    const newVideo = {
-      title,
-      youtubeId,
-      note: note || "",
-      status: "to-watch" as const,
-      addedAt: new Date(),
-    };
+    const newVideo =
+      type === "youtube"
+        ? {
+            type: "youtube" as const,
+            title,
+            youtubeId: youtubeId as string,
+            note: note || "",
+            status: "to-watch" as const,
+            addedAt: new Date(),
+          }
+        : {
+            type: "link" as const,
+            title,
+            url: url as string,
+            note: note || "",
+            status: "to-watch" as const,
+            addedAt: new Date(),
+          };
 
     playlist.videos.push(newVideo);
     await playlist.save();
