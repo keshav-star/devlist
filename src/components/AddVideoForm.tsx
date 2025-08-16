@@ -22,7 +22,7 @@ import {
 import { toast } from "sonner";
 
 interface AddVideoFormProps {
-  playlists: PlaylistType[];
+  playlists: any;
   onPlaylistCreated: (playlist: PlaylistType) => void;
 }
 
@@ -41,10 +41,14 @@ export function AddVideoForm({
 
     try {
       const playlist = await createPlaylist({ name: newPlaylistName.trim() });
-      onPlaylistCreated(playlist);
-      setSelectedPlaylistId(playlist._id || "");
-      setNewPlaylistName("");
-      setShowCreateForm(false);
+      if ("id" in playlist) {
+        onPlaylistCreated(playlist as any);
+        setSelectedPlaylistId(playlist.id || "");
+        setNewPlaylistName("");
+        setShowCreateForm(false);
+      } else {
+        console.error("Invalid playlist response");
+      }
     } catch (error) {
       console.error("Failed to create playlist:", error);
     }
@@ -159,7 +163,7 @@ export function AddVideoForm({
                     </SelectTrigger>
                     <SelectContent>
                       {playlists.length > 0 &&
-                        playlists.map((playlist) => (
+                        playlists.map((playlist: any) => (
                           <SelectItem
                             key={playlist._id}
                             value={playlist._id || ""}
