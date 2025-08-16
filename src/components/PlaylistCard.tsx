@@ -1,43 +1,46 @@
-'use client'
+"use client";
 
-import { motion } from 'framer-motion'
-import { Play, Clock, Eye, EyeOff, CheckCircle, Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Loading } from '@/components/ui/loading'
-import { formatDate, getStatusColor } from '@/lib/utils'
-import { useDeletePlaylist } from '@/lib/api'
-import { PlaylistType } from '@/models/Playlist'
+import { motion } from "framer-motion";
+import { Play, Clock, Eye, CheckCircle, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loading } from "@/components/ui/loading";
+import { formatDate } from "@/lib/utils";
+import { PlaylistType } from "@/models/Playlist";
+import { deletePlaylist } from "@/app/actions/playlist.actions";
 
 interface PlaylistCardProps {
-  playlist: PlaylistType
-  isSelected: boolean
-  onSelect: (playlist: PlaylistType) => void
-  onDelete: (playlistId: string) => void
+  playlist: PlaylistType;
+  isSelected: boolean;
+  onSelect: (playlist: PlaylistType) => void;
+  onDelete: (playlistId: string) => void;
 }
 
-export function PlaylistCard({ playlist, isSelected, onSelect, onDelete }: PlaylistCardProps) {
-  const deletePlaylistMutation = useDeletePlaylist()
-  
+export function PlaylistCard({
+  playlist,
+  isSelected,
+  onSelect,
+  onDelete,
+}: PlaylistCardProps) {
   const getStatusCounts = () => {
-    const counts = { 'to-watch': 0, 'watching': 0, 'watched': 0 }
-    playlist.videos.forEach(video => {
-      counts[video.status]++
-    })
-    return counts
-  }
+    const counts = { "to-watch": 0, watching: 0, watched: 0 };
+    playlist.videos.forEach((video) => {
+      counts[video.status]++;
+    });
+    return counts;
+  };
 
-  const statusCounts = getStatusCounts()
+  const statusCounts = getStatusCounts();
 
   const handleDelete = async () => {
-    if (confirm('Are you sure you want to delete this playlist?')) {
+    if (confirm("Are you sure you want to delete this playlist?")) {
       try {
-        await deletePlaylistMutation.mutateAsync(playlist._id || '')
-        onDelete(playlist._id || '')
+        await deletePlaylist(playlist._id || "");
+        onDelete(playlist._id || "");
       } catch (error) {
-        console.error('Failed to delete playlist:', error)
+        console.error("Failed to delete playlist:", error);
       }
     }
-  }
+  };
 
   return (
     <motion.div
@@ -45,9 +48,9 @@ export function PlaylistCard({ playlist, isSelected, onSelect, onDelete }: Playl
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4, scale: 1.02 }}
       className={`relative p-8 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
-        isSelected 
-          ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-purple-50 shadow-xl' 
-          : 'border-gray-200/50 hover:border-gray-300 bg-white/70 backdrop-blur-sm hover:shadow-lg'
+        isSelected
+          ? "border-blue-500 bg-gradient-to-br from-blue-50 to-purple-50 shadow-xl"
+          : "border-gray-200/50 hover:border-gray-300 bg-white/70 backdrop-blur-sm hover:shadow-lg"
       }`}
       onClick={() => onSelect(playlist)}
     >
@@ -65,13 +68,13 @@ export function PlaylistCard({ playlist, isSelected, onSelect, onDelete }: Playl
           variant="ghost"
           size="sm"
           onClick={(e) => {
-            e.stopPropagation()
-            handleDelete()
+            e.stopPropagation();
+            handleDelete();
           }}
-          disabled={deletePlaylistMutation.isPending}
+          // disabled={deletePlaylistMutation.isPending}
           className="text-red-500 hover:text-red-700 hover:bg-red-50/50 p-2 rounded-xl"
         >
-          {deletePlaylistMutation.isPending ? (
+          {false ? (
             <Loading size="sm" variant="spinner" />
           ) : (
             <Trash2 className="h-5 w-5" />
@@ -85,7 +88,9 @@ export function PlaylistCard({ playlist, isSelected, onSelect, onDelete }: Playl
             <Play className="h-6 w-6 text-white" />
           </div>
           <div>
-            <span className="text-2xl font-bold text-gray-900">{playlist.videos.length}</span>
+            <span className="text-2xl font-bold text-gray-900">
+              {playlist.videos.length}
+            </span>
             <span className="text-sm text-gray-600 ml-1">videos</span>
           </div>
         </div>
@@ -94,15 +99,21 @@ export function PlaylistCard({ playlist, isSelected, onSelect, onDelete }: Playl
           <div className="grid grid-cols-3 gap-3">
             <div className="flex items-center gap-2 text-sm bg-yellow-50/50 p-2 rounded-lg">
               <Clock className="h-4 w-4 text-yellow-600" />
-              <span className="font-semibold text-yellow-700">{statusCounts['to-watch']}</span>
+              <span className="font-semibold text-yellow-700">
+                {statusCounts["to-watch"]}
+              </span>
             </div>
             <div className="flex items-center gap-2 text-sm bg-blue-50/50 p-2 rounded-lg">
               <Eye className="h-4 w-4 text-blue-600" />
-              <span className="font-semibold text-blue-700">{statusCounts['watching']}</span>
+              <span className="font-semibold text-blue-700">
+                {statusCounts["watching"]}
+              </span>
             </div>
             <div className="flex items-center gap-2 text-sm bg-green-50/50 p-2 rounded-lg">
               <CheckCircle className="h-4 w-4 text-green-600" />
-              <span className="font-semibold text-green-700">{statusCounts['watched']}</span>
+              <span className="font-semibold text-green-700">
+                {statusCounts["watched"]}
+              </span>
             </div>
           </div>
         )}
@@ -111,15 +122,20 @@ export function PlaylistCard({ playlist, isSelected, onSelect, onDelete }: Playl
           <div className="pt-4 border-t border-gray-200/50">
             <div className="flex items-center gap-3">
               <div className="flex-1 h-3 bg-gray-200/50 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-yellow-400 via-blue-500 to-green-500 rounded-full transition-all duration-500"
-                  style={{ 
-                    width: `${(statusCounts['watched'] / playlist.videos.length) * 100}%` 
+                  style={{
+                    width: `${
+                      (statusCounts["watched"] / playlist.videos.length) * 100
+                    }%`,
                   }}
                 />
               </div>
               <span className="text-sm font-semibold text-gray-700">
-                {Math.round((statusCounts['watched'] / playlist.videos.length) * 100)}% complete
+                {Math.round(
+                  (statusCounts["watched"] / playlist.videos.length) * 100
+                )}
+                % complete
               </span>
             </div>
           </div>
@@ -132,5 +148,5 @@ export function PlaylistCard({ playlist, isSelected, onSelect, onDelete }: Playl
         </div>
       )}
     </motion.div>
-  )
-} 
+  );
+}

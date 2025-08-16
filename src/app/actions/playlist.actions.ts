@@ -4,16 +4,18 @@ import dbConnect from "@/lib/db";
 import { Playlist, PlaylistType } from "@/models/Playlist";
 import { cookies } from "next/headers";
 import { addVideoToPlaylist } from "./video.actions";
+import { sanitizePlaylist } from "@/lib/helper";
 
-async function createPlaylist(data: { name: string }) {
+async function retriveToken() {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value || null;
-
-  if (!token) {
-    throw new Error("You must be logged in");
-  }
-
   await dbConnect();
+  return token;
+}
+
+async function createPlaylist(data: { name: string }) {
+  const token = await retriveToken();
+
   const { name } = data;
 
   if (!name || name.trim() === "") {
@@ -21,9 +23,9 @@ async function createPlaylist(data: { name: string }) {
   }
 
   const playlist = new Playlist({ name: name.trim(), userId: token });
-  await playlist.save();
+  const savedPlaylist = await playlist.save();
 
-  return playlist.toObject();
+  return sanitizePlaylist(savedPlaylist);
 }
 
 async function getPlaylists(): Promise<{
@@ -32,15 +34,16 @@ async function getPlaylists(): Promise<{
   data: PlaylistType[];
 }> {
   try {
-    await dbConnect();
+    const token = await retriveToken();
 
-    const playlists = await Playlist.find({}).sort({ createdAt: -1 }).lean();
-    console.log(playlists);
+    const playlists = await Playlist.find({ userId: token }).sort({
+      createdAt: -1,
+    });
+
     return {
       success: true,
       message: "Playlists fetched successfully",
-      //ts-ignore
-      data: playlists as unknown as PlaylistType[],
+      data: playlists,
     };
   } catch (err) {
     console.log(err);
@@ -48,18 +51,9 @@ async function getPlaylists(): Promise<{
   }
 }
 
-// moved to video.actions.ts
-
 const deletePlaylist = async (id: string) => {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value || null;
-
-    if (!token) {
-      throw new Error("You must be logged in");
-    }
-
-    await dbConnect();
+    const token = await retriveToken();
 
     const playlist = await Playlist.findById(id);
     if (!playlist) {

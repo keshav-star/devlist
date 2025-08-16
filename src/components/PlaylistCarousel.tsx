@@ -1,147 +1,162 @@
-'use client'
+"use client";
 
-import { useState, useRef, useEffect, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Play, Clock, Eye, CheckCircle, Search, X } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Loading } from '@/components/ui/loading'
-import { formatDate, getStatusColor } from '@/lib/utils'
-import { useDeletePlaylist } from '@/lib/api'
-import { PlaylistType } from '@/models/Playlist'
-import { UseMutationResult } from '@tanstack/react-query'
+import { useState, useRef, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Play,
+  Clock,
+  Eye,
+  CheckCircle,
+  Search,
+  X,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Loading } from "@/components/ui/loading";
+import { formatDate } from "@/lib/utils";
+import { PlaylistType } from "@/models/Playlist";
+import { deletePlaylist } from "@/app/actions/playlist.actions";
 
 interface PlaylistCarouselProps {
-  playlists: PlaylistType[]
-  selectedPlaylist: PlaylistType | null
-  onSelect: (playlist: PlaylistType) => void
-  onDelete: (playlistId: string) => void
+  playlists: PlaylistType[];
+  selectedPlaylist: PlaylistType | null;
+  onSelect: (playlist: PlaylistType) => void;
+  onDelete: (playlistId: string) => void;
 }
 
-export function PlaylistCarousel({ 
-  playlists, 
-  selectedPlaylist, 
-  onSelect, 
-  onDelete 
+export function PlaylistCarousel({
+  playlists,
+  selectedPlaylist,
+  onSelect,
+  onDelete,
 }: PlaylistCarouselProps) {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true)
-  const [isDragging, setIsDragging] = useState(false)
-  const [startX, setStartX] = useState(0)
-  const [currentX, setCurrentX] = useState(0)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const carouselRef = useRef<HTMLDivElement>(null)
-  const searchInputRef = useRef<HTMLInputElement>(null)
-  const deletePlaylistMutation = useDeletePlaylist()
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [currentX, setCurrentX] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Filter playlists based on search query
   const filteredPlaylists = useMemo(() => {
-    if (!searchQuery.trim()) return playlists
-    
-    return playlists.filter(playlist =>
+    if (!searchQuery.trim()) return playlists;
+
+    return playlists.filter((playlist) =>
       playlist.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  }, [playlists, searchQuery])
+    );
+  }, [playlists, searchQuery]);
 
   // Auto-play functionality
   useEffect(() => {
-    if (!isAutoPlaying || filteredPlaylists.length <= 3) return
+    if (!isAutoPlaying || filteredPlaylists.length <= 3) return;
 
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % Math.max(1, filteredPlaylists.length - 2))
-    }, 5000)
+      setCurrentIndex(
+        (prev) => (prev + 1) % Math.max(1, filteredPlaylists.length - 2)
+      );
+    }, 5000);
 
-    return () => clearInterval(interval)
-  }, [isAutoPlaying, filteredPlaylists.length])
+    return () => clearInterval(interval);
+  }, [isAutoPlaying, filteredPlaylists.length]);
 
   // Pause auto-play on hover
-  const handleMouseEnter = () => setIsAutoPlaying(false)
-  const handleMouseLeave = () => setIsAutoPlaying(true)
+  const handleMouseEnter = () => setIsAutoPlaying(false);
+  const handleMouseLeave = () => setIsAutoPlaying(true);
 
   // Touch/Swipe handlers for mobile
   const handleTouchStart = (e: React.TouchEvent) => {
-    setIsDragging(true)
-    setStartX(e.touches[0].clientX)
-    setCurrentX(e.touches[0].clientX)
-  }
+    setIsDragging(true);
+    setStartX(e.touches[0].clientX);
+    setCurrentX(e.touches[0].clientX);
+  };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return
-    setCurrentX(e.touches[0].clientX)
-  }
+    if (!isDragging) return;
+    setCurrentX(e.touches[0].clientX);
+  };
 
   const handleTouchEnd = () => {
-    if (!isDragging) return
-    
-    const diff = startX - currentX
-    const threshold = 50 // minimum swipe distance
-    
+    if (!isDragging) return;
+
+    const diff = startX - currentX;
+    const threshold = 50; // minimum swipe distance
+
     if (Math.abs(diff) > threshold) {
       if (diff > 0) {
-        nextSlide()
+        nextSlide();
       } else {
-        prevSlide()
+        prevSlide();
       }
     }
-    
-    setIsDragging(false)
-  }
+
+    setIsDragging(false);
+  };
 
   // Reset carousel index when search changes
   useEffect(() => {
-    setCurrentIndex(0)
-  }, [searchQuery])
+    setCurrentIndex(0);
+  }, [searchQuery]);
 
   // Focus search input when search is opened
   useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
-      searchInputRef.current.focus()
+      searchInputRef.current.focus();
     }
-  }, [isSearchOpen])
+  }, [isSearchOpen]);
 
   const toggleSearch = () => {
-    setIsSearchOpen(!isSearchOpen)
+    setIsSearchOpen(!isSearchOpen);
     if (!isSearchOpen) {
-      setSearchQuery('')
+      setSearchQuery("");
     }
-  }
+  };
 
   const clearSearch = () => {
-    setSearchQuery('')
-    setIsSearchOpen(false)
-  }
+    setSearchQuery("");
+    setIsSearchOpen(false);
+  };
 
-  const getStatusCounts = (playlist: PlaylistType) => {
-    const counts = { 'to-watch': 0, 'watching': 0, 'watched': 0 }
-    playlist.videos.forEach(video => {
-      counts[video.status]++
-    })
-    return counts
-  }
+  // const getStatusCounts = (playlist: PlaylistType) => {
+  //   const counts = { "to-watch": 0, watching: 0, watched: 0 };
+  //   playlist.videos.forEach((video) => {
+  //     counts[video.status]++;
+  //   });
+  //   return counts;
+  // };
 
   const handleDelete = async (playlist: PlaylistType) => {
-    if (confirm('Are you sure you want to delete this playlist?')) {
+    if (confirm("Are you sure you want to delete this playlist?")) {
       try {
-        await deletePlaylistMutation.mutateAsync(playlist._id || '')
-        onDelete(playlist._id || '')
+        await deletePlaylist(playlist._id || "");
+        onDelete(playlist._id || "");
       } catch (error) {
-        console.error('Failed to delete playlist:', error)
+        console.error("Failed to delete playlist:", error);
       }
     }
-  }
+  };
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % Math.max(1, filteredPlaylists.length - 2))
-  }
+    setCurrentIndex(
+      (prev) => (prev + 1) % Math.max(1, filteredPlaylists.length - 2)
+    );
+  };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + Math.max(1, filteredPlaylists.length - 2)) % Math.max(1, filteredPlaylists.length - 2))
-  }
+    setCurrentIndex(
+      (prev) =>
+        (prev - 1 + Math.max(1, filteredPlaylists.length - 2)) %
+        Math.max(1, filteredPlaylists.length - 2)
+    );
+  };
 
   const goToSlide = (index: number) => {
-    setCurrentIndex(index)
-  }
+    setCurrentIndex(index);
+  };
 
   if (playlists.length === 0) {
     return (
@@ -149,10 +164,14 @@ export function PlaylistCarousel({
         <div className="w-20 h-20 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
           <Play className="h-10 w-10 text-gray-400" />
         </div>
-        <h3 className="text-xl font-semibold text-gray-600 mb-2">No Playlists Yet</h3>
-        <p className="text-gray-500">Create your first playlist to get started</p>
+        <h3 className="text-xl font-semibold text-gray-600 mb-2">
+          No Playlists Yet
+        </h3>
+        <p className="text-gray-500">
+          Create your first playlist to get started
+        </p>
       </div>
-    )
+    );
   }
 
   // Show no results message when search has no matches
@@ -162,8 +181,12 @@ export function PlaylistCarousel({
         <div className="w-20 h-20 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
           <Search className="h-10 w-10 text-gray-400" />
         </div>
-        <h3 className="text-xl font-semibold text-gray-600 mb-2">No Playlists Found</h3>
-        <p className="text-gray-500 mb-4">No playlists match &quot;{searchQuery}&quot;</p>
+        <h3 className="text-xl font-semibold text-gray-600 mb-2">
+          No Playlists Found
+        </h3>
+        <p className="text-gray-500 mb-4">
+          No playlists match &quot;{searchQuery}&quot;
+        </p>
         <Button
           onClick={clearSearch}
           variant="outline"
@@ -172,7 +195,7 @@ export function PlaylistCarousel({
           Clear Search
         </Button>
       </div>
-    )
+    );
   }
 
   // For 3 or fewer playlists, show them all without carousel
@@ -193,7 +216,7 @@ export function PlaylistCarousel({
             {isSearchOpen && (
               <motion.div
                 initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 'auto', opacity: 1 }}
+                animate={{ width: "auto", opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
                 className="flex items-center gap-2"
               >
@@ -232,12 +255,11 @@ export function PlaylistCarousel({
               isSelected={selectedPlaylist?._id === playlist._id}
               onSelect={onSelect}
               onDelete={handleDelete}
-              deleteMutation={deletePlaylistMutation}
             />
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -257,7 +279,7 @@ export function PlaylistCarousel({
             {isSearchOpen && (
               <motion.div
                 initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 'auto', opacity: 1 }}
+                animate={{ width: "auto", opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
                 className="flex items-center gap-2"
               >
@@ -290,26 +312,28 @@ export function PlaylistCarousel({
       </div>
 
       {/* Carousel Container */}
-      <div 
+      <div
         className="relative group"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <div 
+        <div
           className="relative overflow-hidden rounded-2xl"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <div 
+          <div
             ref={carouselRef}
-            className={`flex transition-transform duration-500 ease-out ${isDragging ? 'transition-none' : ''}`}
+            className={`flex transition-transform duration-500 ease-out ${
+              isDragging ? "transition-none" : ""
+            }`}
             style={{
-              transform: `translateX(-${currentIndex * (100 / 3)}%)`
+              transform: `translateX(-${currentIndex * (100 / 3)}%)`,
             }}
           >
-            {filteredPlaylists.map((playlist, index) => (
-              <div 
+            {filteredPlaylists.map((playlist) => (
+              <div
                 key={playlist._id}
                 className="w-full md:w-1/2 lg:w-1/3 flex-shrink-0 px-3"
               >
@@ -318,7 +342,6 @@ export function PlaylistCarousel({
                   isSelected={selectedPlaylist?._id === playlist._id}
                   onSelect={onSelect}
                   onDelete={handleDelete}
-                  deleteMutation={deletePlaylistMutation}
                 />
               </div>
             ))}
@@ -353,14 +376,16 @@ export function PlaylistCarousel({
       {/* Dots Indicator */}
       {filteredPlaylists.length > 3 && (
         <div className="flex justify-center mt-6 space-x-2">
-          {Array.from({ length: Math.max(1, filteredPlaylists.length - 2) }).map((_, index) => (
+          {Array.from({
+            length: Math.max(1, filteredPlaylists.length - 2),
+          }).map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
                 index === currentIndex
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-500 w-6'
-                  : 'bg-gray-300 hover:bg-gray-400'
+                  ? "bg-gradient-to-r from-blue-500 to-purple-500 w-6"
+                  : "bg-gray-300 hover:bg-gray-400"
               }`}
             />
           ))}
@@ -370,7 +395,8 @@ export function PlaylistCarousel({
       {/* Playlist Counter */}
       <div className="text-center mt-4">
         <span className="text-sm text-gray-500">
-          {currentIndex + 1} of {Math.max(1, filteredPlaylists.length - 2)} playlists
+          {currentIndex + 1} of {Math.max(1, filteredPlaylists.length - 2)}{" "}
+          playlists
         </span>
         {filteredPlaylists.length > 3 && (
           <div className="mt-2 text-xs text-gray-400">
@@ -379,32 +405,30 @@ export function PlaylistCarousel({
         )}
       </div>
     </div>
-  )
+  );
 }
 
 // Individual Playlist Card Component
-function PlaylistCard({ 
-  playlist, 
-  isSelected, 
-  onSelect, 
-  onDelete, 
-  deleteMutation 
+function PlaylistCard({
+  playlist,
+  isSelected,
+  onSelect,
+  onDelete,
 }: {
-  playlist: PlaylistType
-  isSelected: boolean
-  onSelect: (playlist: PlaylistType) => void
-  onDelete: (playlist: PlaylistType) => void
-  deleteMutation: UseMutationResult<void, Error, string, unknown>
+  playlist: PlaylistType;
+  isSelected: boolean;
+  onSelect: (playlist: PlaylistType) => void;
+  onDelete: (playlist: PlaylistType) => void;
 }) {
   const getStatusCounts = () => {
-    const counts = { 'to-watch': 0, 'watching': 0, 'watched': 0 }
-    playlist.videos.forEach(video => {
-      counts[video.status]++
-    })
-    return counts
-  }
+    const counts = { "to-watch": 0, watching: 0, watched: 0 };
+    playlist.videos.forEach((video) => {
+      counts[video.status]++;
+    });
+    return counts;
+  };
 
-  const statusCounts = getStatusCounts()
+  const statusCounts = getStatusCounts();
 
   return (
     <motion.div
@@ -412,9 +436,9 @@ function PlaylistCard({
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4, scale: 1.02 }}
       className={`relative p-6 rounded-2xl border-2 transition-all duration-300 cursor-pointer h-full ${
-        isSelected 
-          ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-purple-50 shadow-xl' 
-          : 'border-gray-200/50 hover:border-gray-300 bg-white/70 backdrop-blur-sm hover:shadow-lg'
+        isSelected
+          ? "border-blue-500 bg-gradient-to-br from-blue-50 to-purple-50 shadow-xl"
+          : "border-gray-200/50 hover:border-gray-300 bg-white/70 backdrop-blur-sm hover:shadow-lg"
       }`}
       onClick={() => onSelect(playlist)}
     >
@@ -432,13 +456,13 @@ function PlaylistCard({
           variant="ghost"
           size="sm"
           onClick={(e) => {
-            e.stopPropagation()
-            onDelete(playlist)
+            e.stopPropagation();
+            onDelete(playlist);
           }}
-          disabled={deleteMutation.isPending}
+          // disabled={deleteMutation.isPending}
           className="text-red-500 hover:text-red-700 hover:bg-red-50/50 p-2 rounded-xl"
         >
-          {deleteMutation.isPending ? (
+          {false ? (
             <Loading size="sm" variant="spinner" />
           ) : (
             <ChevronRight className="h-4 w-4" />
@@ -452,7 +476,9 @@ function PlaylistCard({
             <Play className="h-5 w-5 text-white" />
           </div>
           <div>
-            <span className="text-lg font-bold text-gray-900">{playlist.videos.length}</span>
+            <span className="text-lg font-bold text-gray-900">
+              {playlist.videos.length}
+            </span>
             <span className="text-sm text-gray-600 ml-1">videos</span>
           </div>
         </div>
@@ -461,15 +487,21 @@ function PlaylistCard({
           <div className="grid grid-cols-3 gap-2">
             <div className="flex items-center gap-1 text-xs bg-yellow-50/50 p-2 rounded-lg">
               <Clock className="h-3 w-3 text-yellow-600" />
-              <span className="font-semibold text-yellow-700">{statusCounts['to-watch']}</span>
+              <span className="font-semibold text-yellow-700">
+                {statusCounts["to-watch"]}
+              </span>
             </div>
             <div className="flex items-center gap-1 text-xs bg-blue-50/50 p-2 rounded-lg">
               <Eye className="h-3 w-3 text-blue-600" />
-              <span className="font-semibold text-blue-700">{statusCounts['watching']}</span>
+              <span className="font-semibold text-blue-700">
+                {statusCounts["watching"]}
+              </span>
             </div>
             <div className="flex items-center gap-1 text-xs bg-green-50/50 p-2 rounded-lg">
               <CheckCircle className="h-3 w-3 text-green-600" />
-              <span className="font-semibold text-green-700">{statusCounts['watched']}</span>
+              <span className="font-semibold text-green-700">
+                {statusCounts["watched"]}
+              </span>
             </div>
           </div>
         )}
@@ -478,15 +510,20 @@ function PlaylistCard({
           <div className="pt-2 border-t border-gray-200/50">
             <div className="flex items-center gap-2">
               <div className="flex-1 h-2 bg-gray-200/50 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-yellow-400 via-blue-500 to-green-500 rounded-full transition-all duration-500"
-                  style={{ 
-                    width: `${(statusCounts['watched'] / playlist.videos.length) * 100}%` 
+                  style={{
+                    width: `${
+                      (statusCounts["watched"] / playlist.videos.length) * 100
+                    }%`,
                   }}
                 />
               </div>
               <span className="text-xs font-semibold text-gray-700">
-                {Math.round((statusCounts['watched'] / playlist.videos.length) * 100)}%
+                {Math.round(
+                  (statusCounts["watched"] / playlist.videos.length) * 100
+                )}
+                %
               </span>
             </div>
           </div>
@@ -499,5 +536,5 @@ function PlaylistCard({
         </div>
       )}
     </motion.div>
-  )
-} 
+  );
+}

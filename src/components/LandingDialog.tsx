@@ -69,8 +69,12 @@ export function LandingDialog({ token }: { token: string | null }) {
     setCopied(true);
   };
 
+  const handleClose = () => {
+    if (token) setShowDialog(false);
+    resetValues();
+  };
   return (
-    <Dialog open={showDialog} onOpenChange={setShowDialog}>
+    <Dialog open={showDialog} onOpenChange={handleClose}>
       <DialogOverlay />
       <DialogContent className="bg-gray-100 p-6">
         <DialogHeader>

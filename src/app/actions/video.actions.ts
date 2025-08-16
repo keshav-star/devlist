@@ -1,9 +1,27 @@
 "use server";
 
 import dbConnect from "@/lib/db";
+import { sanitizePlaylist } from "@/lib/helper";
 import { Playlist } from "@/models/Playlist";
+import { cookies } from "next/headers";
 
 type VideoStatus = "to-watch" | "watching" | "watched";
+
+async function retrivePlaylist(id: string) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value || null;
+  await dbConnect();
+  const playlist = await Playlist.findById(id);
+
+  if (!playlist) {
+    return { success: false, message: "Playlist not found" };
+  }
+
+  if (playlist.userId !== token) {
+    return { success: false, message: "Unauthorized" };
+  }
+  return playlist;
+}
 
 const addVideoToPlaylist = async (
   id: string,
@@ -14,29 +32,31 @@ const addVideoToPlaylist = async (
   }: { title: string; youtubeId: string; note?: string }
 ) => {
   try {
-    await dbConnect();
-    const playlist = await Playlist.findOne({ _id: id });
-
-    if (!playlist) {
-      throw new Error("Playlist not found");
+    const playlist = await retrivePlaylist(id);
+    //check if video already exist
+    const video = playlist.videos.find((v: any) => {
+      console.log(youtubeId, v.youtubeId);
+      return v.youtubeId === youtubeId;
+    });
+    if (video) {
+      return { success: false, message: "Video already exist in playlist" };
     }
 
     const newVideo = {
       title,
       youtubeId,
-      note: note || "",
+      note: note || "Youtube Video",
       status: "to-watch" as const,
       addedAt: new Date(),
     };
 
     playlist.videos.push(newVideo);
-    await playlist.save();
+    const savedPlaylist = await playlist.save();
 
     return {
       success: true,
       message: "Video added to playlist successfully",
-      // keeping return shape consistent with existing implementation
-      data: JSON.parse(JSON.stringify(playlist)),
+      data: sanitizePlaylist(savedPlaylist),
     };
   } catch (error) {
     throw error;
@@ -45,12 +65,7 @@ const addVideoToPlaylist = async (
 
 const deleteVideoFromPlaylist = async (id: string, videoId: string) => {
   try {
-    await dbConnect();
-    const playlist = await Playlist.findById(id);
-
-    if (!playlist) {
-      return { success: false, message: "Playlist not found" };
-    }
+    const playlist = await retrivePlaylist(id);
 
     const initialLength = playlist.videos.length;
     playlist.videos = playlist.videos.filter(
@@ -61,12 +76,12 @@ const deleteVideoFromPlaylist = async (id: string, videoId: string) => {
       return { success: false, message: "Video not found" };
     }
 
-    await playlist.save();
+    const savedPlaylist = await playlist.save();
 
     return {
       success: true,
       message: "Video deleted successfully",
-      data: JSON.parse(JSON.stringify(playlist)),
+      data: sanitizePlaylist(savedPlaylist),
     };
   } catch (error) {
     throw error;
@@ -79,12 +94,7 @@ const updateVideoInPlaylist = async (
   updates: { title?: string; note?: string }
 ) => {
   try {
-    await dbConnect();
-    const playlist = await Playlist.findById(id);
-
-    if (!playlist) {
-      return { success: false, message: "Playlist not found" };
-    }
+    const playlist = await retrivePlaylist(id);
 
     const video = playlist.videos.id(videoId);
     if (!video) {
@@ -98,12 +108,12 @@ const updateVideoInPlaylist = async (
       video.note = updates.note;
     }
 
-    await playlist.save();
+    const savedPlaylist = await playlist.save();
 
     return {
       success: true,
       message: "Video updated successfully",
-      data: JSON.parse(JSON.stringify(playlist)),
+      data: sanitizePlaylist(savedPlaylist),
     };
   } catch (error) {
     throw error;
@@ -116,12 +126,7 @@ const updateVideoStatus = async (
   status: VideoStatus
 ) => {
   try {
-    await dbConnect();
-    const playlist = await Playlist.findById(id);
-
-    if (!playlist) {
-      return { success: false, message: "Playlist not found" };
-    }
+    const playlist = await retrivePlaylist(id);
 
     const video = playlist.videos.id(videoId);
     if (!video) {
@@ -129,12 +134,12 @@ const updateVideoStatus = async (
     }
 
     video.status = status;
-    await playlist.save();
+    const savedPlaylist = await playlist.save();
 
     return {
       success: true,
       message: "Video status updated successfully",
-      data: JSON.parse(JSON.stringify(playlist)),
+      data: sanitizePlaylist(savedPlaylist),
     };
   } catch (error) {
     throw error;
@@ -147,4 +152,3 @@ export {
   updateVideoInPlaylist,
   updateVideoStatus,
 };
-
