@@ -1,91 +1,91 @@
-import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import { Playlist } from "@/models/Playlist";
+// import { NextRequest, NextResponse } from "next/server";
+// import dbConnect from "@/lib/db";
+// import { Playlist } from "@/models/Playlist";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const id = (await params).id;
-  try {
-    await dbConnect();
-    const playlist = await Playlist.findById(id);
+// export async function GET(
+//   request: NextRequest,
+//   { params }: { params: Promise<{ id: string }> }
+// ) {
+//   const id = (await params).id;
+//   try {
+//     await dbConnect();
+//     const playlist = await Playlist.findById(id);
 
-    if (!playlist) {
-      return NextResponse.json(
-        { error: "Playlist not found" },
-        { status: 404 }
-      );
-    }
+//     if (!playlist) {
+//       return NextResponse.json(
+//         { error: "Playlist not found" },
+//         { status: 404 }
+//       );
+//     }
 
-    return NextResponse.json(playlist);
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to fetch playlist" },
-      { status: 500 }
-    );
-  }
-}
+//     return NextResponse.json(playlist);
+//   } catch (error) {
+//     return NextResponse.json(
+//       { error: "Failed to fetch playlist" },
+//       { status: 500 }
+//     );
+//   }
+// }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const id = (await params).id;
-  try {
-    await dbConnect();
-    const { name } = await request.json();
+// export async function PUT(
+//   request: NextRequest,
+//   { params }: { params: Promise<{ id: string }> }
+// ) {
+//   const id = (await params).id;
+//   try {
+//     await dbConnect();
+//     const { name } = await request.json();
 
-    if (!name || name.trim() === "") {
-      return NextResponse.json(
-        { error: "Playlist name is required" },
-        { status: 400 }
-      );
-    }
+//     if (!name || name.trim() === "") {
+//       return NextResponse.json(
+//         { error: "Playlist name is required" },
+//         { status: 400 }
+//       );
+//     }
 
-    const playlist = await Playlist.findByIdAndUpdate(
-      id,
-      { name: name.trim() },
-      { new: true }
-    );
+//     const playlist = await Playlist.findByIdAndUpdate(
+//       id,
+//       { name: name.trim() },
+//       { new: true }
+//     );
 
-    if (!playlist) {
-      return NextResponse.json(
-        { error: "Playlist not found" },
-        { status: 404 }
-      );
-    }
+//     if (!playlist) {
+//       return NextResponse.json(
+//         { error: "Playlist not found" },
+//         { status: 404 }
+//       );
+//     }
 
-    return NextResponse.json(playlist);
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to update playlist" },
-      { status: 500 }
-    );
-  }
-}
+//     return NextResponse.json(playlist);
+//   } catch (error) {
+//     return NextResponse.json(
+//       { error: "Failed to update playlist" },
+//       { status: 500 }
+//     );
+//   }
+// }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const id = (await params).id;
-  try {
-    await dbConnect();
-    const playlist = await Playlist.findByIdAndDelete(id);
+// export async function DELETE(
+//   request: NextRequest,
+//   { params }: { params: Promise<{ id: string }> }
+// ) {
+//   const id = (await params).id;
+//   try {
+//     await dbConnect();
+//     const playlist = await Playlist.findByIdAndDelete(id);
 
-    if (!playlist) {
-      return NextResponse.json(
-        { error: "Playlist not found" },
-        { status: 404 }
-      );
-    }
+//     if (!playlist) {
+//       return NextResponse.json(
+//         { error: "Playlist not found" },
+//         { status: 404 }
+//       );
+//     }
 
-    return NextResponse.json({ message: "Playlist deleted successfully" });
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to delete playlist" },
-      { status: 500 }
-    );
-  }
-}
+//     return NextResponse.json({ message: "Playlist deleted successfully" });
+//   } catch (error) {
+//     return NextResponse.json(
+//       { error: "Failed to delete playlist" },
+//       { status: 500 }
+//     );
+//   }
+// }
