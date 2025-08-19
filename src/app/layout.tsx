@@ -3,23 +3,35 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Toaster } from "@/components/ui/sonner";
+import GoogleAnalytics from "../components/GoogleAnalytics";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "DevList - Organize Your YouTube Videos",
-  description: "A powerful YouTube playlist manager to organize, track, and manage your video learning journey. Create playlists, add videos, and track your progress with ease.",
-  keywords: ["YouTube", "playlist", "manager", "organizer", "video", "learning", "education"],
+  description:
+    "A powerful YouTube playlist manager to organize, track, and manage your video learning journey. Create playlists, add videos, and track your progress with ease.",
+  keywords: [
+    "YouTube",
+    "playlist",
+    "manager",
+    "organizer",
+    "video",
+    "learning",
+    "education",
+  ],
   authors: [{ name: "Keshav Sandhu" }],
   openGraph: {
     title: "DevList - Organize Your YouTube Videos",
-    description: "A powerful YouTube playlist manager to organize, track, and manage your video learning journey.",
+    description:
+      "A powerful YouTube playlist manager to organize, track, and manage your video learning journey.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "DevList - Organize Your YouTube Videos",
-    description: "A powerful YouTube playlist manager to organize, track, and manage your video learning journey.",
+    description:
+      "A powerful YouTube playlist manager to organize, track, and manage your video learning journey.",
   },
 };
 
@@ -30,10 +42,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <GoogleAnalytics />
       <body className={inter.className}>
-        <Providers>
-          {children}
-        </Providers>
+        <Providers>{children}</Providers>
         <Toaster richColors position="bottom-right" />
       </body>
     </html>
